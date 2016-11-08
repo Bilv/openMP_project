@@ -81,14 +81,14 @@ double dijkstra(){
   start = get_time();
   tree[0] = 1;
 
-  //#TODO parallèliser
+  //#TODO paralléliser
   for (int i = 1; i < num_nodes; i++)
     tree[i] = 0;
 
-  //#TODO parallèliser
+  //#TODO paralléliser
   for (int i = 0; i < num_nodes; i++)
     min_distance[i] = get_distance(0,i);
-
+  //#TODO décider si peut paralleliser
   for (int step = 1; step < num_nodes; step++ ){
     // find nearest node
     shortest_dist = INF;
