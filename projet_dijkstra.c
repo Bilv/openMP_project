@@ -80,9 +80,12 @@ double dijkstra(){
 
   start = get_time();
   tree[0] = 1;
+
+  //#TODO parallèliser
   for (int i = 1; i < num_nodes; i++)
     tree[i] = 0;
 
+  //#TODO parallèliser
   for (int i = 0; i < num_nodes; i++)
     min_distance[i] = get_distance(0,i);
 
