@@ -63,6 +63,7 @@ int get_distance(int node1, int node2){
     return 0;
   struct direct_edge_struct *edge = nodes[node1];
   while (edge != NULL){
+        #pragma omp single
     if (edge->destination_node == node2)
       return edge->weight;
     edge = edge->next;
@@ -82,24 +83,28 @@ double dijkstra(){
   tree[0] = 1;
 
   //#TODO paralléliser
+  #pragma omp parallel for
   for (int i = 1; i < num_nodes; i++)
     tree[i] = 0;
 
   //#TODO paralléliser
+  #pragma omp parallel for
   for (int i = 0; i < num_nodes; i++)
     min_distance[i] = get_distance(0,i);
   //#TODO décider si peut paralleliser
+  #pragma omp parallel
   for (int step = 1; step < num_nodes; step++ ){
     // find nearest node
     shortest_dist = INF;
     nearest_node = -1;
+    #pragma omp for
     for (int i = 0; i < num_nodes; i++){
         if ( !tree[i] && min_distance[i] < shortest_dist ){
         shortest_dist = min_distance[i];
         nearest_node = i;
       }
     }
-
+    #pragma omp single
     if ( nearest_node == - 1 ){
       fprintf(stderr,"Warning: Search ended early, the graph might not be connected.\n" );
       break;
@@ -124,6 +129,7 @@ void read_graph(char *filename){
   int node1, node2, weight;
 
   FILE *graph = fopen(filename,"r");
+  #pragma omp single
   if (graph == NULL){
     fprintf(stderr,"File %s not found.\n",filename);
     exit(-1);
@@ -135,6 +141,7 @@ void read_graph(char *filename){
         break;
 
       case 'p': // graph size
+          #pragma omp single
         if (sscanf(&(line[5]),"%d %d\n", &num_nodes, &num_edges) != 2){
           fprintf(stderr,"Error in file format in line:\n");
           fprintf(stderr, "%s", line);
@@ -143,24 +150,29 @@ void read_graph(char *filename){
         else
           fprintf(stderr,"Graph contains %d nodes and %d edges\n", num_nodes, num_edges);
           edges = malloc(num_edges*2 * sizeof(struct direct_edge_struct));
+          #pragma omp single
           if (edges == NULL){
             fprintf(stderr,"Error: cannot allocate memory.\n");
             exit(-1);
           }
           nodes = malloc(num_nodes * sizeof(struct direct_edge_struct *));
+          #pragma omp single
           if (nodes == NULL){
             fprintf(stderr,"Error: cannot allocate memory.\n");
             exit(-1);
           }
+          #pragma omp parallel for
           for (int i=0; i<num_nodes; i++)
             nodes[i] = NULL;
 
           min_distance = malloc(num_nodes * sizeof(int));
+          #pragma omp single
           if (min_distance == NULL){
             fprintf(stderr,"Error: cannot allocate memory.\n");
             exit(-1);
           }
           tree = malloc(num_nodes * sizeof(char));
+          #pragma omp single
           if (tree == NULL){
             fprintf(stderr,"Error: cannot allocate memory.\n");
             exit(-1);
@@ -168,6 +180,7 @@ void read_graph(char *filename){
         break;
 
       case 'a': // edge definition
+          #pragma omp single
         if (sscanf(&(line[2]),"%d %d %d\n", &node1, &node2, &weight) != 3){
           fprintf(stderr,"Error in file format in line:\n");
           fprintf(stderr, "%s", line);
